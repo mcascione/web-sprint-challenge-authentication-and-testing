@@ -1,10 +1,13 @@
 const db = require("../../data/dbConfig");
 
-const checkUsernameExists = async (req, res, next) => {
+const checkUsernameDoesNotExist = async (req, res, next) => {
   try {
     const user = await db("users").where("username", req.body.username).first();
     if (!user) {
-      req.user = user;
+      req.user = {
+        password: user.password,
+        username: user.username
+      }
       next();
     } else {
       next({ status: 400, message: "username taken" });
@@ -13,6 +16,23 @@ const checkUsernameExists = async (req, res, next) => {
     next(err);
   }
 };
+
+const checkUsernameExists = async (req, res, next) => {
+    try {
+      const user = await db("users").where("username", req.body.username).first();
+      if (user) {
+        req.user = {
+          password: user.password,
+          username: user.username
+        }
+        next();
+      } else {
+        next({ status: 400, message: "username taken" });
+      }
+    } catch (err) {
+      next(err);
+    }
+  };
 
 const validateReq = (req, res, next) => {
   if (!req.body.username || !req.body.password) {
@@ -24,5 +44,6 @@ const validateReq = (req, res, next) => {
 
 module.exports = {
   checkUsernameExists,
-  validateReq
+  validateReq,
+  checkUsernameDoesNotExist
 };

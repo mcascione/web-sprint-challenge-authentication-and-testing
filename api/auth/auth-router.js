@@ -2,31 +2,35 @@ const router = require("express").Router();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const db = require("../../data/dbConfig");
-const restricted = require("../middleware/restricted");
 const {
   checkUsernameExists,
   validateReq,
+  checkUsernameDoesNotExist,
 } = require("../middleware/auth-middleware");
 const JWT_SECRET = process.env.JWT_SECRET || "shh";
 
-router.post("/register", validateReq, checkUsernameExists, async (req, res) => {
-  let { username, password } = req.body;
-  const hash = bcrypt.hashSync(password, 8);
+router.post(
+  "/register",
+  validateReq,
+  checkUsernameDoesNotExist,
+  async (req, res) => {
+    let { username, password } = req.body;
+    const hash = bcrypt.hashSync(password, 8);
 
-  try {
-    const [user_id] = await db("users").insert({
-      password: hash,
-      username: username,
-    });
-    const newUser = await db("users").where("id", user_id).first();
-    res.status(201).json(newUser);
-  } catch (err) {
-    res.status(err.status).json({
-      message: err.message,
-    });
-  }
+    try {
+      const [user_id] = await db("users").insert({
+        password: hash,
+        username: username,
+      });
+      const newUser = await db("users").where("id", user_id).first();
+      res.status(201).json(newUser);
+    } catch (err) {
+      res.status(err.status).json({
+        message: err.message,
+      });
+    }
 
-  /*
+    /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
     DO NOT EXCEED 2^8 ROUNDS OF HASHING!
@@ -51,9 +55,10 @@ router.post("/register", validateReq, checkUsernameExists, async (req, res) => {
     4- On FAILED registration due to the `username` being taken,
       the response body should include a string exactly as follows: "username taken".
   */
-});
+  }
+);
 
-router.post("/login", validateReq, restricted, (req, res) => {
+router.post("/login", validateReq, checkUsernameExists, (req, res) => {
   if (bcrypt.compareSync(req.body.password, req.user.password)) {
     const token = generateToken(req.user);
     res.status(200).json({ token, message: `welcome, ${req.user.username}` });
