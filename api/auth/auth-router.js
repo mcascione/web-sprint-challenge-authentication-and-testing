@@ -14,7 +14,7 @@ router.post(
   validateReq,
   checkUsernameDoesNotExist,
   async (req, res) => {
-    let { username, password } = req.body;
+    let { password, username } = req.body;
     const hash = bcrypt.hashSync(password, 8);
 
     try {
