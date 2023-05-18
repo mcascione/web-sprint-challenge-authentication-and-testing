@@ -27,7 +27,7 @@ const checkUsernameExists = async (req, res, next) => {
       };
       next();
     } else {
-      next({ status: 400, message: "username taken" });
+      next({ status: 400, message: "invalid credentials" });
     }
   } catch (err) {
     next(err);
